@@ -729,7 +729,19 @@ static UICompositeViewDescription *compositeDescription = nil;
 
 - (void)didTapCallButton:(HistoryCell *)historyCell
 {
-    [self call:historyCell.numberLabel.text displayName:historyCell.nameLabel.text];
+		//  [self call:historyCell.numberLabel.text displayName:historyCell.nameLabel.text];
+	[self call:historyCell.numberLabel.text];
+	
+	ABRecordRef contact = [[[LinphoneManager instance] fastAddressBook] getContact:historyCell.numberLabel.text];
+	History *history = (History *)[[CoreDataManager sharedManager] createManagedObject:@"History"];
+	history.number = [FastAddressBook takePhoneNumberFromAddress:historyCell.numberLabel.text];
+	history.timestamp = [NSDate date];
+	history.name = (contact) ? [FastAddressBook getContactDisplayName:contact] : @"Unknown";
+	[[CoreDataManager sharedManager] saveContextSuccessBlock:^{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self.tableView reloadData];
+		});
+	}];
 }
 
 - (void)didTapAddButton:(HistoryCell *)historyCell
